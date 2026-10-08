@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Asteria Online — Complete Edition</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080c10;color:#f2dfad;font-family:Arial,system-ui,sans-serif;touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated}
+#ui{position:fixed;inset:0;pointer-events:none}
+.panel{background:linear-gradient(#2c221bf5,#17120ff7);border:2px solid #a4773f;border-radius:7px;box-shadow:0 3px #070504,inset 0 0 0 1px #e4bd7540}
+button{font:inherit}
+#hero{position:absolute;left:9px;top:9px;width:310px;padding:8px}
+.heroName{font-weight:900;font-size:14px;letter-spacing:.5px;text-shadow:2px 2px #000}
+.lv{float:right;color:#ffd86a;font-weight:900}
+.bar{height:9px;background:#080706;border:2px solid #49301c;border-radius:3px;margin-top:4px;overflow:hidden}.fill{height:100%}
+.hp{background:linear-gradient(#ff655c,#a91e27)}.mp{background:linear-gradient(#68c9ff,#245fc8)}.xp{background:linear-gradient(#ffe680,#bd771b)}
+#stats{font:9px monospace;color:#c5b18c;margin-top:4px}
+#target{position:absolute;left:50%;top:9px;transform:translateX(-50%);min-width:190px;padding:6px 10px;text-align:center;font-size:11px}
+#target b{color:#ffdd76}.tbar{height:6px;background:#090706;margin-top:4px}.tfill{height:100%;background:#d8453e}
+#quest{position:absolute;right:9px;top:9px;width:260px;padding:8px;font-size:11px;line-height:1.4}
+#quest b{color:#ffd86a}.qbar{height:4px;background:#080706;margin-top:4px}.qfill{height:100%;background:#d3a43e}
+#mini{position:absolute;right:12px;top:106px;width:116px;height:116px;border:2px solid #a4773f;border-radius:6px}
+#menu{position:absolute;left:9px;top:105px;display:flex;gap:5px;pointer-events:auto}
+.btn{border:2px solid #8b653a;background:#292019;color:#f1d39a;border-radius:5px;padding:6px 8px;font-size:10px;font-weight:900;box-shadow:0 2px #070504}
+#chat{position:absolute;left:9px;bottom:9px;width:355px;min-height:52px;padding:7px 9px;font:10px/1.35 monospace}
+#skills{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);display:flex;gap:5px;pointer-events:auto}
+.skill{position:relative;width:52px;height:52px;border:2px solid #a4773f;border-radius:6px;background:linear-gradient(#3c2d22,#18120f);box-shadow:0 3px #070504;color:white}
+.skill .n{position:absolute;left:4px;top:2px;font:9px monospace;color:#f7d477}.skill svg{width:34px;height:34px;margin-top:8px}
+#actions{position:absolute;right:10px;bottom:10px;display:flex;gap:8px;align-items:end;pointer-events:auto}
+.action{width:62px;height:62px;border-radius:50%;border:3px solid #a4773f;background:radial-gradient(circle at 35% 28%,#493427,#19120f 70%);color:#f7d99d;font-weight:900;font-size:10px;box-shadow:0 4px #070504}
+.attack{width:80px;height:80px;background:radial-gradient(circle at 35% 25%,#904535,#291411 70%);font-size:12px}
+#joy{position:absolute;left:9px;bottom:9px;width:128px;height:128px;border:2px solid #9a703f;border-radius:50%;background:#15110eb8;pointer-events:auto}
+#stick{position:absolute;left:37px;top:37px;width:50px;height:50px;border:2px solid #c39456;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8b6744,#443124)}
+.modal{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(570px,94vw);max-height:84vh;overflow:auto;padding:12px;pointer-events:auto}
+.modal h2{margin:0 0 10px;color:#ffd76b}.close{float:right}
+.tabs{display:flex;gap:5px;margin-bottom:8px}.tab{flex:1}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.item{height:64px;border:2px solid #6d4d30;border-radius:5px;background:#100d0b;display:grid;place-items:center;position:relative}.item small{position:absolute;right:3px;bottom:2px;color:#d6bc88;font-size:9px}
+.equip{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.equip div{min-height:58px;border:2px solid #735333;background:#17110e;border-radius:5px;padding:5px;font-size:10px}
+.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #533b26;padding:8px 2px}.gold{color:#ffd66a}.blue{color:#9cdcff}.green{color:#a8dc86}
+@media(max-width:700px){
+#hero{width:240px}.heroName{font-size:12px}#stats{font-size:8px}#target{top:3px}
+#quest{width:178px;font-size:9px}#mini{width:92px;height:92px}
+#menu{top:100px}.btn{padding:5px 6px}
+#chat{width:250px;font-size:9px;min-height:45px}
+#skills{bottom:5px;transform:translateX(-50%) scale(.82);transform-origin:bottom center}
+#actions{right:4px;bottom:5px;transform:scale(.78);transform-origin:right bottom}
+#joy{left:5px;bottom:5px;transform:scale(.8);transform-origin:left bottom}
+}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="ui">
+<div id="hero" class="panel">
+<span class="heroName">ASTERIA KNIGHT</span><span class="lv">Lv.<b id="lv">8</b></span>
+<div class="bar"><div id="hp" class="fill hp"></div></div><div class="bar"><div id="mp" class="fill mp"></div></div><div class="bar" style="height:5px"><div id="xp" class="fill xp"></div></div>
+<div id="stats">STR 18 • AGI 14 • VIT 16 • INT 9 • ATK 22 • DEF 12</div>
+</div>
+<div id="target" class="panel"><b id="targetName">No Target</b><div class="tbar"><div id="targetHP" class="tfill"></div></div></div>
+<div id="quest" class="panel"><b>QUEST • FOREST TROUBLE</b><br>Forest Slime <span id="qcount">0/8</span><div class="qbar"><div id="qfill" class="qfill"></div></div><span class="green">Reward: 120 EXP • 80 Gold</span></div>
+<canvas id="mini"></canvas>
+<div id="menu"><button class="btn" id="bagBtn">BAG</button><button class="btn" id="charBtn">CHAR</button><button class="btn" id="shopBtn">SHOP</button><button class="btn" id="saveBtn">SAVE</button><button class="btn" id="timeBtn">DAY</button></div>
+<div id="chat" class="panel"><span class="gold">[System]</span> Asteria Village พร้อมแล้ว<br><span class="blue">[Guide]</span> ใช้ joystick เดิน เลือกศัตรูแล้ว ATTACK</div>
+<div id="skills">
+<button class="skill" onclick="potion()"><span class="n">1</span><svg viewBox="0 0 32 32"><path fill="#e9d7bd" d="M12 4h8v5h3v4h-2v13H11V13H9V9h3z"/><path fill="#cf3940" d="M12 15h8v9h-8z"/><path fill="#fff" d="M14 5h4v3h-4z"/></svg></button>
+<button class="skill" onclick="attack(1.45)"><span class="n">2</span><svg viewBox="0 0 32 32"><path fill="#e1ebf1" d="M5 24 21 8l3 3L8 27z"/><path fill="#a87943" d="m21 8 4-4 3 3-4 4zM4 25l5 3-5 1z"/></svg></button>
+<button class="skill" onclick="astral()"><span class="n">3</span><svg viewBox="0 0 32 32"><path fill="#74d5ff" d="m16 2 3 10 10 4-10 4-3 10-3-10-10-4 10-4z"/><path fill="#fff" d="m16 8 1 6 6 2-6 2-1 6-1-6-6-2 6-2z"/></svg></button>
+<button class="skill" onclick="dash()"><span class="n">4</span><svg viewBox="0 0 32 32"><path fill="#e6bb5e" d="M4 14h15V8l9 8-9 8v-6H4z"/><path fill="#fff1a2" d="M7 16h12v2H7z"/></svg></button>
+</div>
+<div id="actions"><button class="action" onclick="astral()">SKILL</button><button class="action attack" onclick="attack(1)">ATTACK</button></div>
+<div id="joy"><div id="stick"></div></div>
+
+<div id="bag" class="modal panel"><button class="btn close" onclick="closeModal('bag')">CLOSE</button><h2>INVENTORY</h2>
+<div class="equip"><div>WEAPON<br><b>Iron Sword +2</b></div><div>ARMOR<br><b>Blue Guard</b></div><div>RING<br><b>Ruby Ring</b></div></div>
+<div class="grid" id="items"></div></div>
+
+<div id="character" class="modal panel"><button class="btn close" onclick="closeModal('character')">CLOSE</button><h2>CHARACTER</h2>
+<div class="row"><span>Level</span><b id="cLv">8</b></div><div class="row"><span>HP / MP</span><b id="cHp">100 / 100</b></div><div class="row"><span>Attack</span><b>22 + 8</b></div><div class="row"><span>Defense</span><b>12 + 5</b></div><div class="row"><span>Gold</span><b class="gold" id="goldChar">1260 G</b></div>
+</div>
+
+<div id="shop" class="modal panel"><button class="btn close" onclick="closeModal('shop')">CLOSE</button><h2>VILLAGE SHOP</h2>
+<div class="row"><span>Red Potion ×1</span><button class="btn" onclick="buyPotion()">50 G</button></div>
+<div class="row"><span>Iron Sword +1</span><button class="btn" onclick="buySword()">400 G</button></div>
+<div class="row"><span>Blue Guard Armor</span><button class="btn" onclick="buyArmor()">650 G</button></div>
+</div>
+</div>
+
+<script>
+'use strict';
+const C=document.getElementById('game'),ctx=C.getContext('2d'),MIN=document.getElementById('mini'),mx=MIN.getContext('2d');
+let W=innerWidth,H=innerHeight,day=true,keys={},jx=0,jy=0,last=performance.now(),kills=0,particles=[],floats=[],arcs=[],loot=[],selected=null;
+const world={w:2400,h:1700},p={x:1200,y:920,hp:100,maxHp:100,mp:100,maxMp:100,lv:8,xp:48,maxXp:100,gold:1260,atk:22,def:12,speed:180,dir:1,attackCd:0,skillCd:0};
+const mobs=[],npcs=[{x:1210,y:900,type:'elder',name:'Elder Arin'},{x:1330,y:880,type:'merchant',name:'Mira'}];
+const houses=[{x:850,y:590,w:300,h:210,c:'#895437',r:'#5a3028'},{x:1390,y:540,w:300,h:225,c:'#805037',r:'#512a25'},{x:1020,y:1090,w:275,h:210,c:'#8a5639',r:'#5b3028'}];
+function resize(){W=innerWidth;H=innerHeight;C.width=W;C.height=H;MIN.width=115;MIN.height=115}addEventListener('resize',resize);resize();
+function R(a,b){return a+Math.random()*(b-a)}
+function cam(){return{x:Math.max(0,Math.min(world.w-W,p.x-W/2)),y:Math.max(270,Math.min(world.h-H,p.y-H/2))}}
+function spawn(kind='slime'){let a={x:R(300,2150),y:R(380,1500),kind,hp:kind==='wolf'?80:55,max:kind==='wolf'?80:55,spd:kind==='wolf'?65:45,phase:R(0,6),name:kind==='wolf'?'Forest Wolf':'Forest Slime'};mobs.push(a)}
+for(let i=0;i<12;i++)spawn(i%5===0?'wolf':'slime');
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(x,y,w,h)}
+function drawMap(q){
+ ctx.fillStyle=day?'#6da55b':'#354f53';ctx.fillRect(0,0,W,H);
+ for(let tx=Math.floor(q.x/32)*32;tx<q.x+W+32;tx+=32)for(let ty=Math.floor(q.y/32)*32;ty<q.y+H+32;ty+=32){
+  if(((tx/32+ty/32)&1)===0)rect(tx-q.x,ty-q.y,32,32,day?'#70aa5d':'#375450');
+  if((tx*7+ty*3)%19===0){rect(tx-q.x+8,ty-q.y+8,2,2,day?'#4c8348':'#45635a');rect(tx-q.x+22,ty-q.y+21,2,2,day?'#86ba68':'#607566')}
+ }
+ rect(-q.x,-q.y,world.w,270,day?'#4394a7':'#285a6b');
+ for(let yy=20;yy<265;yy+=34)for(let xx=0;xx<world.w;xx+=90)rect(xx-q.x+(yy%44),yy-q.y,28,2,day?'#72c1c9':'#3e7b83');
+ rect(-q.x,795-q.y,world.w,172,day?'#b9945c':'#766a50');
+ for(let xx=0;xx<world.w;xx+=35)rect(xx-q.x,825-q.y,23,2,day?'#c9a66e':'#84765a');
+ rect(715-q.x,270-q.y,210,world.h,day?'#b5c47c':'#66765f');
+ for(let i=0;i<45;i++)tree(120+(i*183)%2180,350+(i*139)%1230);
+ houses.forEach(house);
+ for(let i=0;i<10;i++){rect(842+i*42-q.x,796-q.y,34,148,'#79502f');rect(842+i*42-q.x,796-q.y,34,5,'#ad7740')}
+ for(let i=0;i<75;i++){let wx=100+(i*149)%2200,wy=330+(i*87)%1250;rect(wx-q.x,wy-q.y,2,2,i%3?'#e2d17a':'#df858d')}
+}
+function tree(wx,wy){let q=cam(),X=wx-q.x,Y=wy-q.y;rect(X-18,Y+16,36,7,'#0004');rect(X-5,Y-7,10,28,'#684229');rect(X-28,Y-35,56,40,'#245c37');rect(X-21,Y-49,42,29,'#2d713f');rect(X-10,Y-57,20,18,'#40894a');rect(X-23,Y-31,12,6,'#49944e')}
+function house(b){let q=cam(),X=b.x-q.x,Y=b.y-q.y;rect(X+8,Y+b.h,b.w-16,8,'#0004');rect(X,Y,b.w,b.h,b.c);ctx.fillStyle=b.r;ctx.beginPath();ctx.moveTo(X-18,Y+42);ctx.lineTo(X+b.w/2,Y-46);ctx.lineTo(X+b.w+18,Y+42);ctx.fill();rect(X+27,Y+65,45,39,'#79b8c0');rect(X+b.w-72,Y+65,45,39,'#79b8c0');rect(X+b.w*.43,Y+b.h*.55,b.w*.15,b.h*.45,'#d0a45a')}
+function shadow(X,Y,w){rect(X-w/2,Y,w,6,'#0005')}
+function heroSprite(){
+ let q=cam(),X=p.x-q.x,Y=p.y-q.y,b=Math.sin(performance.now()/90)*2;shadow(X,Y+29,32);
+ rect(X-12,Y-5+b,24,28,'#492331');rect(X-12,Y+15+b,9,16,'#172d48');rect(X+3,Y+15-b,9,16,'#172d48');rect(X-14,Y+28,12,5,'#39241d');rect(X+2,Y+28,12,5,'#39241d');
+ rect(X-15,Y-8+b,30,25,'#315d86');rect(X-11,Y-4+b,22,14,'#4b80a3');rect(X-21,Y-5+b,7,18,'#d39a68');rect(X+14,Y-5-b,7,18,'#d39a68');
+ rect(X-11,Y-29+b,22,20,'#d99d6b');rect(X-14,Y-34+b,28,9,'#4b2b23');rect(X-9,Y-39+b,18,6,'#62372a');rect(X-8,Y-24+b,3,3,'#211a18');rect(X+5,Y-24+b,3,3,'#211a18');
+ ctx.save();ctx.translate(X+18,Y-2);ctx.rotate(-.35+p.dir*.12);rect(-2,-27,4,33,'#dce8ed');rect(-5,5,10,4,'#b27b40');rect(-2,9,5,12,'#5a3525');ctx.restore();
+}
+function slimeSprite(a){let q=cam(),X=a.x-q.x,Y=a.y-q.y,b=Math.sin(performance.now()/150+a.phase)*2;shadow(X,Y+18,34);if(a.kind==='wolf'){rect(X-17,Y-13+b,34,27,'#493b46');rect(X-11,Y-24+b,8,10,'#594957');rect(X+3,Y-24+b,8,10,'#594957');rect(X-10,Y-6+b,5,5,'#e7b96a');rect(X+5,Y-6+b,5,5,'#e7b96a');rect(X-12,Y+12+b,8,12,'#2e2530');rect(X+4,Y+12+b,8,12,'#2e2530');return}rect(X-19,Y-11+b,38,28,'#1e4c2b');rect(X-16,Y-15+b,32,31,'#4c9d45');rect(X-11,Y-19+b,22,7,'#6cbd55');rect(X-11,Y-6+b,5,5,'#142018');rect(X+6,Y-6+b,5,5,'#142018');rect(X-3,Y+5+b,7,3,'#d1e875');rect(X-10,Y-13+b,5,3,'#a8dc75')}
+function barFor(a){let q=cam(),X=a.x-q.x,Y=a.y-q.y;rect(X-22,Y-34,44,5,'#100b0a');rect(X-21,Y-33,42*a.hp/a.max,3,a.kind==='wolf'?'#d85a3d':'#e44843')}
+function burst(o,n,c='#ffe17b'){for(let i=0;i<n;i++)particles.push({x:o.x,y:o.y,vx:R(-115,115),vy:R(-135,25),life:R(.35,.75),c,s:R(2,5)})}
+function float(o,s,c='#ffe17b'){floats.push({x:o.x,y:o.y-38,s,c,life:1})}
+function nearest(){let best=null,bd=145;for(const a of mobs){let d=Math.hypot(a.x-p.x,a.y-p.y);if(d<bd){bd=d;best=a}}return best}
+function selectTarget(a){selected=a;document.getElementById('targetName').textContent=a?a.name:'No Target'}
+function attack(mult){if(p.attackCd>0)return;let a=selected;if(!a||!mobs.includes(a)||Math.hypot(a.x-p.x,a.y-p.y)>145)a=nearest();if(!a){float(p,'NO TARGET','#aaa');return}selectTarget(a);p.attackCd=.38;let crit=Math.random()<.12,d=Math.round(p.atk*mult*(crit?2:1));a.hp-=d;burst(a,crit?18:8,crit?'#fff3a0':'#ffe17b');float(a,(crit?'CRIT ':'-')+d,crit?'#fff2a0':'#ffd76b');arcs.push({x:p.x,y:p.y,a:Math.atan2(a.y-p.y,a.x-p.x),life:.23,crit});if(a.hp<=0)killMob(a)}
+function killMob(a){kills++;p.xp+=a.kind==='wolf'?12:7;p.gold+=a.kind==='wolf'?30:18;float(a,'+EXP','#8bdfff');burst(a,20,'#bde8ff');if(Math.random()<.7)loot.push({x:a.x,y:a.y,kind:'drop',life:12});let i=mobs.indexOf(a);if(i>=0)mobs.splice(i,1);spawn(Math.random()<.18?'wolf':'slime');document.getElementById('qcount').textContent=Math.min(8,kills)+'/8';document.getElementById('qfill').style.width=Math.min(100,kills/8*100)+'%';if(p.xp>=p.maxXp){p.xp-=p.maxXp;p.lv++;p.maxXp=Math.round(p.maxXp*1.18);p.maxHp+=8;p.maxMp+=5;p.atk+=2;p.def+=1;p.hp=p.maxHp;p.mp=p.maxMp;float(p,'LEVEL UP!','#ffe16c')}}
+function astral(){if(p.skillCd>0||p.mp<20)return;p.mp-=20;p.skillCd=2.5;burst(p,32,'#72d8ff');float(p,'ASTRAL SLASH','#8fe5ff');for(const a of [...mobs])if(Math.hypot(a.x-p.x,a.y-p.y)<190){a.hp-=38;burst(a,10,'#b7edff');float(a,'-38','#9fe8ff');if(a.hp<=0)killMob(a)}}
+function potion(){p.hp=Math.min(p.maxHp,p.hp+35);burst(p,10,'#ff8079')}
+function dash(){p.x+=p.dir>0?100:-100;burst(p,18,'#b8efff')}
+function interact(){let n=npcs.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<70);if(n){chat(n.name+': ยินดีต้อนรับสู่ Asteria Village','#ffd66c');if(n.type==='merchant')openModal('shop');return}let l=loot.find(a=>Math.hypot(a.x-p.x,a.y-p.y)<55);if(l){p.gold+=25;loot.splice(loot.indexOf(l),1);chat('[Loot] +25 Gold','#ffe16c')}}
+function chat(a,c='#f2dfad'){document.getElementById('chat').innerHTML='<span style="color:'+c+'">'+a+'</span><br><span class="blue">[Guide]</span> เดินสำรวจหมู่บ้านและป่าได้เลย'}
+function update(dt){
+ let dx=(keys.d?1:0)-(keys.a?1:0)+jx,dy=(keys.s?1:0)-(keys.w?1:0)+jy,l=Math.hypot(dx,dy);if(l){dx/=l;dy/=l;p.x+=dx*p.speed*dt;p.y+=dy*p.speed*dt;if(Math.abs(dx)>.1)p.dir=dx>0?1:-1}
+ p.x=Math.max(70,Math.min(world.w-70,p.x));p.y=Math.max(340,Math.min(world.h-70,p.y));p.attackCd=Math.max(0,p.attackCd-dt);p.skillCd=Math.max(0,p.skillCd-dt);p.mp=Math.min(p.maxMp,p.mp+3*dt);
+ for(const a of mobs){let d=Math.hypot(p.x-a.x,p.y-a.y);if(d<270&&d>40){a.x+=(p.x-a.x)/d*a.spd*dt;a.y+=(p.y-a.y)/d*a.spd*dt}if(d<38)p.hp-=Math.max(1,8-p.def*.15)*dt}
+ if(p.hp<=0){p.hp=p.maxHp;p.mp=p.maxMp*.5;p.x=1200;p.y=920;chat('[System] กลับมาที่เมืองแล้ว','#ff9b8d')}
+ for(const z of particles){z.x+=z.vx*dt;z.y+=z.vy*dt;z.vy+=160*dt;z.life-=dt}particles=particles.filter(z=>z.life>0);
+ for(const z of floats){z.y-=25*dt;z.life-=dt}floats=floats.filter(z=>z.life>0);
+ for(const z of arcs)z.life-=dt;arcs=arcs.filter(z=>z.life>0);
+ for(const z of loot)z.life-=dt;loot=loot.filter(z=>z.life>0);
+ if(selected&&!mobs.includes(selected))selected=null;
+ let q=cam();if(selected){document.getElementById('targetName').textContent=selected.name;document.getElementById('targetHP').style.width=Math.max(0,selected.hp/selected.max*100)+'%'}else{document.getElementById('targetName').textContent='No Target';document.getElementById('targetHP').style.width='0%'}
+ document.getElementById('hp').style.width=Math.max(0,p.hp/p.maxHp*100)+'%';document.getElementById('mp').style.width=p.mp/p.maxMp*100+'%';document.getElementById('xp').style.width=p.xp/p.maxXp*100+'%';document.getElementById('lv').textContent=p.lv;
+ document.getElementById('stats').textContent='STR '+(18+p.lv-8)+' • AGI 14 • VIT '+(16+p.lv-8)+' • INT 9 • ATK '+p.atk+' • DEF '+p.def;
+}
+function draw(){
+ ctx.clearRect(0,0,W,H);let q=cam();drawMap(q);
+ for(const l of loot){let X=l.x-q.x,Y=l.y-q.y;rect(X-6,Y-6,12,12,'#5c3d1d');rect(X-3,Y-10,6,18,'#f2c84f');rect(X-10,Y-3,20,6,'#f2c84f')}
+ npcs.forEach(n=>{let X=n.x-q.x,Y=n.y-q.y;rect(X-14,Y+12,28,6,'#0004');rect(X-13,Y-10,26,25,n.type==='merchant'?'#7c4b83':'#506f83');rect(X-9,Y-27,18,18,'#d39a68');rect(X-12,Y-31,24,7,'#5a3528');});
+ mobs.forEach(a=>{slimeSprite(a);barFor(a)});
+ heroSprite();
+ if(selected&&mobs.includes(selected)){let X=selected.x-q.x,Y=selected.y-q.y;ctx.strokeStyle='#ffe06b';ctx.lineWidth=2;ctx.strokeRect(X-24,Y-42,48,48)}
+ for(const a of arcs){ctx.save();ctx.translate(a.x-q.x,a.y-q.y);ctx.rotate(a.a);ctx.strokeStyle=a.crit?'#fff6a8':'#d8f5ff';ctx.lineWidth=a.crit?8:5;ctx.globalAlpha=a.life/.23;ctx.beginPath();ctx.arc(0,0,a.crit?60:48,-.75,.75);ctx.stroke();ctx.restore()}
+ for(const z of particles){ctx.globalAlpha=Math.max(0,z.life/.75);rect(z.x-q.x,z.y-q.y,z.s,z.s,z.c)}ctx.globalAlpha=1;
+ for(const z of floats){ctx.font='bold 13px monospace';ctx.textAlign='center';ctx.globalAlpha=z.life;ctx.fillStyle='#000';ctx.fillText(z.s,z.x-q.x+2,z.y-q.y+2);ctx.fillStyle=z.c;ctx.fillText(z.s,z.x-q.x,z.y-q.y)}ctx.globalAlpha=1;
+ drawMini();
+}
+function drawMini(){mx.clearRect(0,0,115,115);mx.fillStyle=day?'#356548':'#203d43';mx.fillRect(0,0,115,115);mx.fillStyle='#4b98a9';mx.fillRect(0,0,115,18);mx.fillStyle='#b08a55';mx.fillRect(0,51,115,10);for(const b of houses){mx.fillStyle='#875437';mx.fillRect(b.x/world.w*115,b.y/world.h*115,b.w/world.w*115,b.h/world.h*115)}for(const a of mobs){mx.fillStyle=a.kind==='wolf'?'#b16c6c':'#9bd34e';mx.fillRect(a.x/world.w*115-2,a.y/world.h*115-2,4,4)}mx.fillStyle='#ffe16b';mx.fillRect(p.x/world.w*115-3,p.y/world.h*115-3,6,6)}
+function openModal(id){document.getElementById(id).style.display='block'}function closeModal(id){document.getElementById(id).style.display='none'}
+function buyPotion(){if(p.gold>=50){p.gold-=50;p.hp=Math.min(p.maxHp,p.hp+35);chat('[Shop] ซื้อ Red Potion สำเร็จ','#a8dc86')}else chat('[Shop] Gold ไม่พอ','#ff9b8d')}
+function buySword(){if(p.gold>=400){p.gold-=400;p.atk+=5;chat('[Shop] Iron Sword +1 ติดตั้งแล้ว','#a8dc86')}else chat('[Shop] Gold ไม่พอ','#ff9b8d')}
+function buyArmor(){if(p.gold>=650){p.gold-=650;p.def+=5;chat('[Shop] Blue Guard ติดตั้งแล้ว','#a8dc86')}else chat('[Shop] Gold ไม่พอ','#ff9b8d')}
+document.getElementById('bagBtn').onclick=()=>openModal('bag');document.getElementById('charBtn').onclick=()=>{document.getElementById('cLv').textContent=p.lv;document.getElementById('cHp').textContent=Math.ceil(p.hp)+' / '+p.maxHp;document.getElementById('goldChar').textContent=p.gold+' G';openModal('character')};document.getElementById('shopBtn').onclick=()=>openModal('shop');
+document.getElementById('saveBtn').onclick=()=>{localStorage.setItem('asteria_complete',JSON.stringify(p));chat('[System] GAME SAVED','#a8dc86')};
+document.getElementById('timeBtn').onclick=()=>{day=!day;document.getElementById('timeBtn').textContent=day?'DAY':'NIGHT'};
+document.getElementById('items').innerHTML=['sword','shield','potion','gem','armor','ring','herb','crystal','ore','coin'].map((a,i)=>'<div class="item"><b>'+(['⚔','◈','✚','◆','▣','○','☘','◇','■','●'][i])+'</b><small>'+((i%3)+1)+'</small></div>').join('');
+addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=1;if(e.key===' ')attack(1);if(e.key==='1')potion();if(e.key==='2')attack(1.45);if(e.key==='3')astral();if(e.key==='4')dash();if(e.key==='e')interact()});
+addEventListener('keyup',e=>keys[e.key.toLowerCase()]=0);
+const joy=document.getElementById('joy'),stick=document.getElementById('stick');function joyMove(e){let r=joy.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2),d=Math.hypot(dx,dy),mxv=42;if(d>mxv){dx=dx/d*mxv;dy=dy/d*mxv}jx=dx/mxv;jy=dy/mxv;stick.style.transform='translate('+dx+'px,'+dy+'px)'}joy.onpointerdown=e=>{joy.setPointerCapture(e.pointerId);joyMove(e)};joy.onpointermove=e=>joyMove(e);joy.onpointerup=()=>{jx=jy=0;stick.style.transform='translate(0,0)'};
+C.addEventListener('pointerdown',e=>{if(e.target!==C)return;let q=cam(),wx=e.clientX+q.x,wy=e.clientY+q.y,best=null,bd=55;for(const a of mobs){let d=Math.hypot(a.x-wx,a.y-wy);if(d<bd){bd=d;best=a}}if(best)selectTarget(best);else interact()});
+function loop(t){let dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+</script>
+</body>
+</html>
