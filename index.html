@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#101a27">
+<title>Asteria Online — Complete Pixel MMO Base</title>
+<style>
+:root{--bg:#08111b;--panel:#111d2a;--panel2:#18283a;--gold:#e8c66a;--text:#f4f0d8;--muted:#9eafbd;--hp:#e34b4b;--mp:#438de8;--xp:#b28cff}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#000;color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+#game{position:fixed;inset:0;background:#000;image-rendering:pixelated}
+canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
+#hud{position:fixed;inset:0;pointer-events:none}
+.top{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:8px;align-items:flex-start}
+.card{background:linear-gradient(#16283aee,#0d1825ee);border:2px solid #394c5d;box-shadow:0 3px 0 #06101a,0 0 0 1px #101923;border-radius:6px}
+.status{width:min(310px,52vw);padding:7px 9px}
+.name{font-weight:800;font-size:14px}.sub{font-size:10px;color:#9eb0bf}
+.bar{height:10px;background:#071019;border:1px solid #000;margin-top:4px;position:relative;border-radius:2px;overflow:hidden}.bar i{display:block;height:100%}.hp i{background:linear-gradient(#ff6b6b,#b92632)}.mp i{background:linear-gradient(#65b6ff,#2a57c8)}.xp i{background:linear-gradient(#d7a6ff,#7950cf)}
+.bar span{position:absolute;inset:0;text-align:center;font-size:8px;line-height:8px;text-shadow:1px 1px #000}
+.zone{margin-left:auto;padding:8px 10px;text-align:right;font-size:11px}.zone b{display:block;color:var(--gold)}
+#buttons{position:absolute;right:12px;bottom:18px;display:flex;gap:8px;align-items:end;pointer-events:auto}
+.btn{width:58px;height:58px;border-radius:50%;border:2px solid #a98642;background:radial-gradient(circle at 35% 25%,#415c72,#17283a 62%,#0a131e);color:#fff;font-weight:900;font-size:11px;box-shadow:0 4px 0 #050b10;touch-action:none}.btn.big{width:72px;height:72px;border-color:#d6a948;background:radial-gradient(circle at 35% 25%,#6f5871,#2b1830 62%,#0b0a12)}
+#joy{position:absolute;left:14px;bottom:20px;width:122px;height:122px;border:2px solid #5a6b78aa;border-radius:50%;background:#0b152080;pointer-events:auto;touch-action:none}.knob{position:absolute;width:48px;height:48px;left:35px;top:35px;border-radius:50%;background:#263c50;border:2px solid #8797a4;box-shadow:0 3px 0 #071019}
+#hotbar{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;gap:3px;pointer-events:auto}
+.slot{width:42px;height:42px;background:#0c1722dd;border:2px solid #526170;border-radius:4px;display:grid;place-items:center;font-size:21px;position:relative}.slot small{position:absolute;right:2px;bottom:0;font-size:8px;color:#fff}
+#mini{position:absolute;right:12px;top:88px;width:112px;height:82px;background:#071019dd;border:2px solid #4b5c6c;border-radius:4px;overflow:hidden}
+#toast{position:absolute;left:50%;top:74px;transform:translateX(-50%);padding:7px 12px;background:#0b1522e8;border:1px solid #657789;border-radius:4px;font-size:11px;opacity:0;transition:.2s}
+#toast.on{opacity:1}
+.modal{position:absolute;inset:0;background:#02070acc;display:none;align-items:center;justify-content:center;pointer-events:auto;padding:16px}.modal.show{display:flex}
+.window{width:min(760px,94vw);max-height:82vh;overflow:auto;background:#111e2c;border:2px solid #6b7c8c;box-shadow:0 7px 0 #03070b;border-radius:7px;padding:12px}.window h2{margin:0 0 8px;color:var(--gold);font-size:18px}.close{float:right;background:#2a3948;border:1px solid #6c7a85;color:#fff;border-radius:4px;padding:4px 9px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:7px}.item{background:#182a3c;border:1px solid #46596b;padding:9px;border-radius:4px}.item b{display:block}.tabs{display:flex;gap:5px;margin-bottom:8px}.tabs button{background:#1c2e40;color:#fff;border:1px solid #566a7a;padding:6px 9px;border-radius:4px}
+.quest{background:#0b1723;border:1px solid #33495d;padding:8px;margin:6px 0;border-radius:4px}
+@media(max-width:600px){.zone{display:none}.status{width:70vw}.top{top:7px}.btn{width:52px;height:52px}.btn.big{width:64px;height:64px}#mini{top:80px;width:94px;height:68px}.slot{width:37px;height:37px;font-size:18px}}
+</style>
+</head>
+<body>
+<div id="game"><canvas id="c"></canvas></div>
+<div id="hud">
+  <div class="top">
+    <div class="card status">
+      <div class="name" id="pname">Asteria • Novice</div><div class="sub" id="lv">Lv. 1 • ATK 12 • DEF 5</div>
+      <div class="bar hp"><i id="hpf" style="width:100%"></i><span id="hpt">HP 100 / 100</span></div>
+      <div class="bar mp"><i id="mpf" style="width:100%"></i><span id="mpt">MP 60 / 60</span></div>
+      <div class="bar xp"><i id="xpf" style="width:0%"></i><span id="xpt">EXP 0 / 100</span></div>
+    </div>
+    <div class="card zone"><b id="zone">Asteria Village</b><span id="clock">Day 12:00</span></div>
+  </div>
+  <canvas id="mini"></canvas>
+  <div id="toast"></div>
+  <div id="joy"><div class="knob"></div></div>
+  <div id="buttons">
+    <button class="btn" data-action="potion">POTION</button>
+    <button class="btn" data-action="skill">SKILL</button>
+    <button class="btn big" data-action="attack">ATTACK</button>
+  </div>
+  <div id="hotbar">
+    <button class="slot" data-menu="inventory">🎒<small>Bag</small></button>
+    <button class="slot" data-menu="equipment">⚔️<small>Equip</small></button>
+    <button class="slot" data-menu="quests">📜<small>Quest</small></button>
+    <button class="slot" data-menu="shop">🛒<small>Shop</small></button>
+    <button class="slot" data-menu="status">✦<small>Status</small></button>
+    <button class="slot" data-menu="save">💾<small>Save</small></button>
+  </div>
+</div>
+
+<div id="modal" class="modal"><div class="window"><button class="close" id="close">Close</button><div id="content"></div></div></div>
+
+<script>
+"use strict";
+const c=document.getElementById("c"),ctx=c.getContext("2d"),mini=document.getElementById("mini"),mx=mini.getContext("2d");
+let W=innerWidth,H=innerHeight,D=devicePixelRatio||1;
+function resize(){W=innerWidth;H=innerHeight;c.width=Math.floor(W*D);c.height=Math.floor(H*D);ctx.setTransform(D,0,0,D,0,0);mini.width=188;mini.height=136;mx.imageSmoothingEnabled=false}addEventListener("resize",resize);resize();
+
+const SAVE="asteria_complete_v1";
+const S={
+ version:"Complete Base 1.0",
+ p:{x:640,y:520,hp:100,maxhp:100,mp:60,maxmp:60,lv:1,exp:0,gold:120,atk:12,def:5,speed:145,dir:0},
+ inv:[{n:"Red Potion",q:5,icon:"🧪"},{n:"Asteria Herb",q:8,icon:"🌿"},{n:"Iron Ore",q:2,icon:"⛏️"}],
+ equip:{weapon:"Wooden Sword",armor:"Novice Tunic"},
+ quest:{slime:0,wolf:0,claimed:false},
+ settings:{sound:true},
+ time:0
+};
+const keys={};addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if(["1","2","3","4","5","6"].includes(e.key)){document.querySelectorAll(".slot")[+e.key-1]?.click()} if(e.key==="Escape")closeModal()});addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+
+const enemies=[];
+function spawn(type,x,y){const data={slime:{hp:38,max:38,atk:7,spd:48,exp:24,gold:8,r:17,color:"#7ee66c"},wolf:{hp:65,max:65,atk:11,spd:67,exp:42,gold:14,r:19,color:"#b9c4cf"},orc:{hp:110,max:110,atk:17,spd:42,exp:75,gold:28,r:23,color:"#b77a55"}}[type];enemies.push({type,x,y,...data,hit:0,dead:0,cd:0,wander:Math.random()*6})}
+for(let i=0;i<7;i++)spawn("slime",300+Math.random()*700,240+Math.random()*560);
+for(let i=0;i<4;i++)spawn("wolf",350+Math.random()*950,250+Math.random()*620);
+spawn("orc",1200,620);
+
+const particles=[],texts=[],slashes=[];
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove("on"),1800)}
+function text(x,y,t,col="#fff"){texts.push({x,y,t,col,life:1})}
+function burst(x,y,col,n=12){for(let i=0;i<n;i++){let a=Math.random()*Math.PI*2,s=35+Math.random()*110;particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.55,max:.55,col})}}
+function addExp(v){S.p.exp+=v;while(S.p.exp>=100+S.p.lv*35){S.p.exp-=100+S.p.lv*35;S.p.lv++;S.p.maxhp+=18;S.p.maxmp+=9;S.p.hp=S.p.maxhp;S.p.mp=S.p.maxmp;S.p.atk+=3;S.p.def+=2;toast("LEVEL UP! Lv."+S.p.lv);burst(S.p.x,S.p.y,"#f5d56b",28)}}
+function nearest(){let best=null,d=170;for(const e of enemies)if(!e.dead){let q=Math.hypot(e.x-S.p.x,e.y-S.p.y);if(q<d){d=q;best=e}}return best}
+function attack(){let e=nearest();if(!e){toast("No target in range");return}let dmg=Math.max(1,S.p.atk+Math.floor(Math.random()*5)-Math.floor(e.def||0));e.hp-=dmg;e.hit=.16;slashes.push({x:e.x,y:e.y,a:Math.random()*6.28,life:.3});text(e.x,e.y-25,"-"+dmg,dmg>18?"#ffe36b":"#fff");burst(e.x,e.y,"#d9ecff",8);if(e.hp<=0){e.dead=1;S.p.gold+=e.gold;addExp(e.exp);S.quest[e.type]=(S.quest[e.type]||0)+1;text(e.x,e.y-42,"+"+e.exp+" EXP","#b9ffbd");toast(e.type.toUpperCase()+" defeated")}else e.cd=.35}
+function skill(){if(S.p.mp<18){toast("Not enough MP");return}S.p.mp-=18;const targets=enemies.filter(e=>!e.dead&&Math.hypot(e.x-S.p.x,e.y-S.p.y)<190);for(const e of targets){let dmg=S.p.atk+16+Math.floor(Math.random()*10);e.hp-=dmg;e.hit=.25;text(e.x,e.y-28,"✦ "+dmg,"#a9e8ff");burst(e.x,e.y,"#8ad8ff",18);if(e.hp<=0){e.dead=1;S.p.gold+=e.gold;addExp(e.exp);S.quest[e.type]=(S.quest[e.type]||0)+1}}slashes.push({x:S.p.x,y:S.p.y,a:0,life:.55,skill:1});toast("ASTRAL SLASH")} 
+function potion(){let it=S.inv.find(x=>x.n==="Red Potion"&&x.q>0);if(!it){toast("No potion");return}if(S.p.hp>=S.p.maxhp){toast("HP is full");return}it.q--;S.p.hp=Math.min(S.p.maxhp,S.p.hp+45);burst(S.p.x,S.p.y,"#ff5b67",10);text(S.p.x,S.p.y-35,"+45","#8dff91")}
+document.querySelectorAll("[data-action]").forEach(b=>b.addEventListener("click",()=>({attack,skill,potion}[b.dataset.action])()));
+
+const joy={x:0,y:0,on:false};
+const joyEl=document.getElementById("joy"),knob=document.querySelector(".knob");
+function joyMove(e){const r=joyEl.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy,m=Math.hypot(dx,dy),max=38;if(m>max){dx*=max/m;dy*=max/m}joy.x=dx/max;joy.y=dy/max;knob.style.transform=`translate(${dx}px,${dy}px)`}
+joyEl.addEventListener("pointerdown",e=>{joy.on=true;joyMove(e);joyEl.setPointerCapture(e.pointerId)});joyEl.addEventListener("pointermove",e=>joy.on&&joyMove(e));joyEl.addEventListener("pointerup",()=>{joy.on=false;joy.x=joy.y=0;knob.style.transform=""});
+function moveInput(){let x=joy.x,y=joy.y;if(keys.w||keys.arrowup)y-=1;if(keys.s||keys.arrowdown)y+=1;if(keys.a||keys.arrowleft)x-=1;if(keys.d||keys.arrowright)x+=1;let m=Math.hypot(x,y);return m>1?{x:x/m,y:y/m}:{x,y}}
+
+function blocked(x,y){return x<55||y<55||x>1510||y>1010}
+function update(dt){
+ const v=moveInput(),p=S.p;
+ if(v.x||v.y){p.x+=v.x*p.speed*dt;p.y+=v.y*p.speed*dt;p.dir=Math.atan2(v.y,v.x);if(blocked(p.x,p.y)){p.x-=v.x*p.speed*dt;p.y-=v.y*p.speed*dt}}
+ S.time+=dt;
+ for(const e of enemies){if(e.dead){e.dead+=dt;continue}e.cd=Math.max(0,e.cd-dt);e.hit=Math.max(0,e.hit-dt);let dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy);if(d<230){e.x+=dx/d*e.spd*dt;e.y+=dy/d*e.spd*dt;if(d<38&&e.cd<=0){let dmg=Math.max(1,e.atk-p.def+Math.floor(Math.random()*3));p.hp-=dmg;e.cd=1.1;text(p.x,p.y-35,"-"+dmg,"#ff7777");if(p.hp<=0){p.hp=p.maxhp;p.mp=p.maxmp;p.x=640;p.y=520;S.p.gold=Math.max(0,S.p.gold-20);toast("You were defeated — returned to town")}}}}
+ for(let i=enemies.length-1;i>=0;i--)if(enemies[i].dead>0.9)enemies.splice(i,1);
+ while(enemies.length<12){let types=["slime","slime","wolf","orc"];spawn(types[Math.floor(Math.random()*types.length)],200+Math.random()*1300,170+Math.random()*760)}
+ for(const q of particles){q.x+=q.vx*dt;q.y+=q.vy*dt;q.vx*=.96;q.vy*=.96;q.life-=dt}for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);
+ for(const q of texts){q.y-=28*dt;q.life-=dt}for(let i=texts.length-1;i>=0;i--)if(texts[i].life<=0)texts.splice(i,1);
+ for(const q of slashes)q.life-=dt;for(let i=slashes.length-1;i>=0;i--)if(slashes[i].life<=0)slashes.splice(i,1);
+ updateHud();
+}
+function updateHud(){
+ const p=S.p, expMax=100+p.lv*35;
+ document.getElementById("lv").textContent=`Lv. ${p.lv} • ATK ${p.atk} • DEF ${p.def}`;
+ document.getElementById("hpf").style.width=(p.hp/p.maxhp*100)+"%";document.getElementById("hpt").textContent=`HP ${Math.ceil(p.hp)} / ${p.maxhp}`;
+ document.getElementById("mpf").style.width=(p.mp/p.maxmp*100)+"%";document.getElementById("mpt").textContent=`MP ${Math.ceil(p.mp)} / ${p.maxmp}`;
+ document.getElementById("xpf").style.width=(p.exp/expMax*100)+"%";document.getElementById("xpt").textContent=`EXP ${Math.floor(p.exp)} / ${expMax}`;
+ const hour=Math.floor((S.time*0.18)%24), min=Math.floor((S.time*10)%60);document.getElementById("clock").textContent=(hour<6||hour>19?"Night ":"Day ")+String(hour).padStart(2,"0")+":"+String(min).padStart(2,"0");
+}
+
+function draw(){
+ const p=S.p;ctx.clearRect(0,0,W,H);const scale=Math.min(W/900,H/560), vw=W/scale,vh=H/scale;let camx=Math.max(0,Math.min(1510-vw,p.x-vw/2)),camy=Math.max(0,Math.min(1010-vh,p.y-vh/2));
+ ctx.save();ctx.scale(scale,scale);ctx.translate(-camx,-camy);
+ // world
+ ctx.fillStyle="#4e9a5b";ctx.fillRect(0,0,1510,1010);
+ for(let x=0;x<1510;x+=32)for(let y=0;y<1010;y+=32){let n=(x*13+y*7)%100;if(n<18){ctx.fillStyle="#5ca764";ctx.fillRect(x+4,y+5,2,6);ctx.fillRect(x+7,y+2,2,8)}}
+ // water and paths
+ ctx.fillStyle="#3f88a8";ctx.fillRect(760,0,120,1010);ctx.fillStyle="#b78b57";ctx.fillRect(0,465,1510,100);
+ for(let x=0;x<1510;x+=28){ctx.fillStyle="#c69a63";ctx.fillRect(x,510+(x%3)*2,20,4)}
+ // town
+ ctx.fillStyle="#8b5e3b";ctx.fillRect(180,260,360,300);ctx.fillStyle="#9a7049";ctx.fillRect(210,290,300,250);
+ drawHouse(260,340,"Asteria Inn");drawHouse(470,350,"Shop");drawHouse(320,610,"Guild");
+ // bridge
+ ctx.fillStyle="#6e4b31";ctx.fillRect(755,445,130,145);for(let y=445;y<590;y+=22){ctx.fillStyle="#9a7047";ctx.fillRect(755,y,130,15)}
+ // trees
+ for(let i=0;i<48;i++){let x=(i*137)%1450+25,y=(i*83)%900+70;if(x>180&&x<560&&y>240&&y<760)continue;if(x>735&&x<900)continue;drawTree(x,y)}
+ // player/NPC/enemies
+ for(const e of enemies)if(!e.dead)drawEnemy(e,camx,camy);
+ drawNPC(625,515,"Mira");drawNPC(580,610,"Blacksmith");
+ drawPlayer(p);
+ for(const q of particles){ctx.globalAlpha=Math.max(0,q.life/.55);ctx.fillStyle=q.col;ctx.fillRect(q.x-2,q.y-2,4,4)}ctx.globalAlpha=1;
+ for(const q of slashes){ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.a);ctx.strokeStyle=q.skill?"#8ce7ff":"#fff2b2";ctx.lineWidth=q.skill?8:5;ctx.globalAlpha=q.life/.55;ctx.beginPath();ctx.arc(0,0,q.skill?70:38,-1.1,1.1);ctx.stroke();ctx.restore()}ctx.globalAlpha=1;
+ for(const q of texts){ctx.globalAlpha=Math.max(0,q.life);ctx.fillStyle=q.col;ctx.font="bold 14px monospace";ctx.textAlign="center";ctx.fillText(q.t,q.x,q.y)}ctx.globalAlpha=1;ctx.restore();
+ drawMini(camx,camy);
+}
+function drawHouse(x,y,name){ctx.fillStyle="#70452f";ctx.fillRect(x,y,150,105);ctx.fillStyle="#5a3030";ctx.beginPath();ctx.moveTo(x-12,y);ctx.lineTo(x+75,y-55);ctx.lineTo(x+162,y);ctx.closePath();ctx.fill();ctx.fillStyle="#d5b06b";ctx.fillRect(x+62,y+52,28,53);ctx.fillStyle="#83a8b0";ctx.fillRect(x+20,y+32,30,24);ctx.fillRect(x+100,y+32,30,24);ctx.fillStyle="#f5dc8b";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText(name,x+75,y-63)}
+function drawTree(x,y){ctx.fillStyle="#5a3925";ctx.fillRect(x-6,y+12,12,35);ctx.fillStyle="#255d38";ctx.fillRect(x-28,y-18,56,45);ctx.fillStyle="#2e7944";ctx.fillRect(x-18,y-34,36,18);ctx.fillStyle="#3f9250";ctx.fillRect(x-9,y-42,18,12);ctx.fillStyle="#7abf63";ctx.fillRect(x-17,y-20,7,7)}
+function drawNPC(x,y,n){ctx.fillStyle="#111";ctx.fillRect(x-12,y+20,24,6);ctx.fillStyle="#f0c09a";ctx.fillRect(x-7,y-20,14,16);ctx.fillStyle="#8a5a38";ctx.fillRect(x-9,y-23,18,7);ctx.fillStyle="#5d8ad4";ctx.fillRect(x-10,y-4,20,25);ctx.fillStyle="#3c2c4e";ctx.fillRect(x-8,y+20,6,12);ctx.fillRect(x+2,y+20,6,12);ctx.fillStyle="#ffeaa3";ctx.font="bold 10px monospace";ctx.textAlign="center";ctx.fillText(n,x,y-31)}
+function drawPlayer(p){let bob=(Math.sin(S.time*9)*2);ctx.save();ctx.translate(p.x,p.y+bob);ctx.fillStyle="#17202a";ctx.fillRect(-16,25,32,7);ctx.fillStyle="#4b2f55";ctx.fillRect(-10,12,8,16);ctx.fillRect(2,12,8,16);ctx.fillStyle="#3f79ba";ctx.fillRect(-14,-5,28,22);ctx.fillStyle="#f1c39e";ctx.fillRect(-10,-25,20,20);ctx.fillStyle="#5a382c";ctx.fillRect(-12,-31,24,10);ctx.fillStyle="#2f6ea8";ctx.fillRect(-16,-2,5,19);ctx.fillStyle="#e7d8a0";ctx.fillRect(11,-4,25,4);ctx.restore()}
+function drawEnemy(e){ctx.save();ctx.translate(e.x,e.y);ctx.fillStyle="#16202a";ctx.fillRect(-e.r,-e.r/3,e.r*2,e.r/2);ctx.fillStyle=e.color;if(e.type==="slime"){ctx.beginPath();ctx.arc(0,0,e.r,Math.PI,0);ctx.lineTo(e.r,e.r*.55);ctx.quadraticCurveTo(0,e.r*1.2,-e.r,e.r*.55);ctx.fill();ctx.fillStyle="#18212a";ctx.fillRect(-6,-2,4,5);ctx.fillRect(2,-2,4,5)}else{ctx.fillRect(-e.r,-e.r*.65,e.r*2,e.r*1.2);ctx.fillStyle="#18212a";ctx.fillRect(-9,-4,5,5);ctx.fillRect(4,-4,5,5)}ctx.fillStyle="#fff";ctx.font="9px monospace";ctx.textAlign="center";ctx.fillText(e.type.toUpperCase(),0,-e.r-10);ctx.fillStyle="#171d22";ctx.fillRect(-e.r,-e.r-7,e.r*2,4);ctx.fillStyle="#e94e59";ctx.fillRect(-e.r,-e.r-7,e.r*2*(e.hp/e.max),4);if(e.hit>0){ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.strokeRect(-e.r-2,-e.r-2,e.r*2+4,e.r*2+4)}ctx.restore()}
+function drawMini(camx,camy){mx.clearRect(0,0,188,136);mx.fillStyle="#3d7e4d";mx.fillRect(0,0,188,136);mx.fillStyle="#397b9b";mx.fillRect(95,0,15,136);mx.fillStyle="#ad8555";mx.fillRect(0,62,188,14);mx.fillStyle="#6c4a31";mx.fillRect(24,30,45,35);mx.fillStyle="#d9d2a1";mx.fillRect((S.p.x/1510)*188-3,(S.p.y/1010)*136-3,6,6);for(const e of enemies){mx.fillStyle=e.type==="orc"?"#f05b58":"#fff";mx.fillRect(e.x/1510*188,e.y/1010*136,3,3)}}
+
+function openMenu(type){const m=document.getElementById("modal"),co=document.getElementById("content");let h="";
+if(type==="inventory")h=`<h2>Inventory</h2><div class="grid">${S.inv.map((i,n)=>`<div class="item"><b>${i.icon} ${i.n}</b><span>จำนวน ${i.q}</span>${i.n==="Red Potion"?`<br><button onclick="potion();openMenu('inventory')">ใช้ Potion</button>`:""}</div>`).join("")}</div>`;
+if(type==="equipment")h=`<h2>Equipment</h2><div class="grid"><div class="item"><b>⚔️ Weapon</b>${S.equip.weapon}<br>ATK +0</div><div class="item"><b>🛡️ Armor</b>${S.equip.armor}<br>DEF +0</div><div class="item"><b>✨ Rarity</b>Common → Upgrade พร้อมใช้งานในระบบต่อยอด</div></div>`;
+if(type==="quests")h=`<h2>Quest Board</h2><div class="quest"><b>Slime Cleanup</b><br>กำจัด Slime: ${S.quest.slime}/8<br>Reward: 80 EXP + 50 Gold</div><div class="quest"><b>Wolf Hunt</b><br>กำจัด Wolf: ${S.quest.wolf}/5<br>Reward: 140 EXP + 90 Gold</div>`;
+if(type==="shop")h=`<h2>Asteria Shop</h2><div class="grid"><div class="item"><b>🧪 Red Potion</b>ฟื้น HP 45<br>ราคา 15 Gold<br><button onclick="buyPotion()">ซื้อ</button></div><div class="item"><b>🗡️ Iron Sword</b>ATK +8<br>ราคา 300 Gold<br><button onclick="buySword()">ซื้อ</button></div></div><p>Gold: ${S.p.gold}</p>`;
+if(type==="status")h=`<h2>Character Status</h2><div class="grid"><div class="item"><b>Level</b>${S.p.lv}</div><div class="item"><b>ATK</b>${S.p.atk}</div><div class="item"><b>DEF</b>${S.p.def}</div><div class="item"><b>Gold</b>${S.p.gold}</div></div><p>Build: Mobile Pixel MMORPG / Complete Base</p>`;
+if(type==="save")h=`<h2>Save & System</h2><div class="grid"><div class="item"><b>Save</b><button onclick="saveGame()">บันทึกเกม</button></div><div class="item"><b>Load</b><button onclick="loadGame();closeModal()">โหลดเกม</button></div><div class="item"><b>Reset</b><button onclick="resetGame()">เริ่มใหม่</button></div></div><p>ข้อมูลเกมถูกเก็บในเครื่องนี้ด้วย LocalStorage</p>`;
+co.innerHTML=h;m.classList.add("show")}
+function closeModal(){document.getElementById("modal").classList.remove("show")}document.getElementById("close").onclick=closeModal;
+document.querySelectorAll("[data-menu]").forEach(b=>b.onclick=()=>openMenu(b.dataset.menu));
+function buyPotion(){if(S.p.gold<15)return toast("Gold ไม่พอ");S.p.gold-=15;let i=S.inv.find(x=>x.n==="Red Potion");i.q++;openMenu("shop")}
+function buySword(){if(S.p.gold<300)return toast("Gold ไม่พอ");S.p.gold-=300;S.p.atk+=8;S.equip.weapon="Iron Sword";toast("Equipped Iron Sword");openMenu("equipment")}
+function saveGame(){localStorage.setItem(SAVE,JSON.stringify(S));toast("Game saved");}
+function loadGame(){let x=localStorage.getItem(SAVE);if(!x){toast("No save found");return}let q=JSON.parse(x);Object.assign(S,q);toast("Game loaded")}
+function resetGame(){if(confirm("Reset Asteria Online?")){localStorage.removeItem(SAVE);location.reload()}}
+loadGame();
+let last=performance.now();function loop(t){let dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}requestAnimationFrame(loop);
+setInterval(()=>{if(Math.random()<.35)saveGame()},30000);
+</script>
+</body>
+</html>
