@@ -1,0 +1,9 @@
+{
+  "name": "Asteria Online — Complete Pixel MMO",
+  "short_name": "Asteria Online",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#08111b",
+  "theme_color": "#101a27",
+  "icons": []
+}
